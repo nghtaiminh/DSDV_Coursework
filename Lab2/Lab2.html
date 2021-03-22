@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+  <title>Lab1</title>
+
+</head>
+
+<body>
+  <title>Lab1</title>
+  <h2>Nguyen Hoang Tai Minh </h2>
+  <h3>ITDSIU18013</h3>
+  <h3>Data Science and Data Visualization </h3>
+  <h3>Lab2 - Introduction to D3.js</h3>
+  <script type="text/javascript">
+
+    const w = 500;
+    const h = 500;
+    const barPadding = 1;
+    var dataset = [5, 30, 29, 15, 20, 60, 25, 33, 29, 9, 30, 21, 32, 13, 55, 12, 70, 58, 95, 20];
+
+    var svg1 = d3.select("body")
+      .append("svg")
+      .attr("width", w)
+      .attr("height", h);
+
+    svg1.selectAll("rect")
+      .data(dataset)
+      .enter()
+      .append("rect")
+      .attr("x", function (d, i) {
+        return i * (w / dataset.length)
+      })
+      .attr("y", function (d) {
+        return h - (d * 4)
+      })
+      .attr("width", w / dataset.length - barPadding)
+      .attr("height", function (d) {
+        return d * 4;
+      })
+      .attr("fill", function (d) {
+        return "rgb(0, 0, " + Math.round(d * 10) + ")"
+      });
+
+    svg1.selectAll("text")
+      .data(dataset)
+      .enter()
+      .append("text")
+      .text(function (d) {
+        return d;
+      })
+      .attr("x", function (d, i) {
+        return i * (w / dataset.length) + (w / dataset.length) / 2;
+      })
+      .attr("y", function (d) {
+        return (h - (d * 4) + 14);
+      })
+      .attr("font-family", "san-serif")
+      .attr("font-sixe", "11px")
+      .attr("fill", "white")
+      .attr("text-anchor", "middle");
+
+  </script>
+  <div></div>
+  <script type="text/javascript">
+
+    // Get the data
+    d3.csv("https://tungth.github.io/data/vis-lab2-data.csv").then(function (data) {
+
+      var myArr = [];
+      for (var idx = 0; idx < data.length; idx++) {
+        myArr.push([parseInt(data[idx].Midterm), parseInt(data[idx].Final)])
+      }
+      scatterplot_dataset = myArr;
+
+      var myArr2 = [];
+      for (var idx = 0; idx < data.length; idx++) {
+        // Use the Lab col as the dataset for the histogram
+        myArr2.push(parseInt(data[idx].Lab))
+      }
+      histogram_data = myArr2;
+
+      generateScatterPlot(scatterplot_dataset);
+      generateHistogram(histogram_data);
+    });
+    /*for(var idx = 0; idx < scatterplot_dataset.length; idx++){
+        console.log(scatterplot_dataset[idx]);
+    }*/
+
+    //
+    function generateScatterPlot(scatterplot_dataset) {
+      // Create the coordinate plane
+      var x = d3.scaleLinear()                // interpolator for X axis -- inner plot region
+        .domain(d3.extent(scatterplot_dataset, function (d) {
+          return d[0];
+        }))
+        .range([0, w - 100]);
+
+      var y = d3.scaleLinear()                // interpolator for Y axis -- inner plot region
+        .domain(d3.extent(scatterplot_dataset, function (d) {
+          return d[1];
+        }))
+        .range([h, 100]);
+
+      var line = d3.line()                     // SVG line generator
+        .x(function (d) { return x(d[0]); })
+        .y(function (d) { return y(d[1]); });
+
+      var xAxis = d3.axisBottom(x)
+        .ticks(10)                            // request 10 ticks on the x axis
+
+      var yAxis = d3.axisLeft(y)                // y Axis
+        .ticks(10)
+
+
+      var svg2 = d3.select("body")
+        .append("svg")
+        .attr("width", w + 300)
+        .attr("height", h + 400);
+
+      var g = svg2.append("g")                  // <g> element is the inner plot area
+        .attr("transform", "translate(" + 25 + "," + 6 + ")");
+
+      g.append("g")                            // render the Y axis in the inner plot area
+        .attr("class", "y axis")
+        .call(yAxis);
+      g.append("g")                            // render the X axis in the inner plot area
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + h + ")")  // axis runs along lower part of graph
+        .call(xAxis);
+
+
+      // Ploting the dots on the coordinate
+      svg2.selectAll("circle")
+        .data(scatterplot_dataset)
+        .enter()
+        .append("circle")
+        .attr("cx", function (d) {
+          return (d[0] * 4) + 25;
+        })
+        .attr("cy", function (d) {
+          return (h - (d[1] * 4)) + 8;
+        })
+        .attr("r", 5)
+        .attr("fill", function (d) {
+          // Check if the student cant pass
+          if (((d[0] * 0.4) + (d[1] * 0.6)) < 50) {
+            // Hightlight the student cant pass the course with red color
+            return "red";
+          }
+          else {
+            return "black";
+          }
+        });
+      /*
+      svg2.selectAll("text")
+          .data(scatterplot_dataset)
+          .enter()
+          .append("text")
+          .text(function(d){
+              return d[0] + "," + d[1]
+          })
+          .attr("x", function(d){
+              return d[0];
+          })
+          .attr("y", function(d){
+              return (h - (d[1] * 4)) + 8
+          })
+          */
+    }
+
+    function generateHistogram(dataset) {
+      //console.log(dataset.length)
+      var histogram_dataset = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      var min = Math.min(...dataset);
+      var max = Math.max(...dataset);
+      binSize = (max - min) / 10;
+      //console.log(binDistance);
+
+      // Add the frequency of each bin
+      for (var idx = 0; idx < dataset.length; idx++) {
+        //console.log(dataset[idx]);
+        for (var bin = 1; bin <= 10; bin++) {
+          if (dataset[idx] >= ((binSize * bin) + min) && dataset[idx] < ((binSize * (bin + 1)) + min)) {
+            histogram_dataset[bin - 1] += 1;
+            //console.log(histogram_dataset);
+            break;
+          }
+          if (dataset[idx] == max) {     // Add the number in the last bin above: [ , )  => [ , ]
+            histogram_dataset[9] += 1;
+            //console.log(histogram_dataset);
+            break;
+          }
+        }
+      }
+
+      var svg3 = d3.select("body")
+        .append("svg")
+        .attr("width", w + 50)
+        .attr("height", h);
+
+      svg3.selectAll("rect")
+        .data(histogram_dataset)
+        .enter()
+        .append("rect")
+        .attr("x", function (d, i) {
+          return i * (w / histogram_dataset.length)
+        })
+        .attr("y", function (d) {
+          return h - (d * 4 + 30);
+        })
+        .attr("width", w / histogram_dataset.length - barPadding)
+        .attr("height", function (d, i) {
+          if (d == 0) {
+            return 1;
+          }
+          else {
+            return d * 4;
+          }
+        })
+        .attr("fill", "blue")
+        .attr("stroke-width", 2)
+        .attr("stroke", "black");
+
+      svg3.selectAll("text")
+        .data(histogram_dataset)
+        .enter()
+        .append("text")
+        .text(function (d) {
+          return d;
+        })
+        .attr("x", function (d, i) {
+          return i * (w / histogram_dataset.length) + 20;
+        })
+        .attr("y", function (d) {
+          return (h - (d * 4 + 35));
+        })
+        .attr("font-family", "san-serif")
+        .attr("font-sixe", "13px")
+        .attr("fill", "black")
+        .attr("text-anchor", "middle");
+
+
+      // Add the x-axis 
+      var x = d3.scaleLinear()
+        .domain(d3.extent(dataset, function (d) {
+          return d;
+        }))
+        .range([0, w]);
+
+      var line = d3.line()
+        .x(function (d) { return x(d.x); });
+
+      var xAxis = d3.axisBottom(x)
+        .ticks(10);
+
+      var g = svg3.append("g")
+        .attr("transform", "translate(" + 1 + "," + 480 + ")");
+
+      g.append("g")                            // render the X axis in the inner plot area
+        .attr("class", "x axis")
+        .call(xAxis);
+
+    }
+
+
+  </script>
+
+</body>
+
+</html>

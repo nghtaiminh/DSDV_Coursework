@@ -1,0 +1,15 @@
+
+#name {
+    color: blue;
+}
+
+#id,#course {
+    font-weight: bold;
+    color: red;
+}
+
+#labTitle {
+    color: red;
+    font-style: italic;
+    font-weight: normal;
+}
